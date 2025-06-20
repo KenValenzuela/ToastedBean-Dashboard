@@ -1,10 +1,10 @@
 # app/main.py
 
 import streamlit as st
+from utils import fetch_query
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
-from utils import fetch_query
 
 st.set_page_config(
     page_title="Toasted Bean Dashboard",
@@ -26,25 +26,23 @@ category_df = fetch_query("sql/revenue_by_category.sql")
 loyalty_df = fetch_query("sql/top_returning_customers.sql")
 alert_df = fetch_query("sql/low_traffic_alerts.sql")
 
-# === Clean Revenue DF Columns ===
+# === Validate Revenue Data ===
+if revenue_df.empty or "date" not in revenue_df.columns:
+    st.error("🚨 Could not load revenue data. Check database connection or SQL file: `sql/sales_trends.sql`.")
+    st.stop()
+
+# === Normalize Column Names ===
 if "date_range" in revenue_df.columns:
     revenue_df.rename(columns={"date_range": "date"}, inplace=True)
 if "total_amount" in revenue_df.columns:
     revenue_df.rename(columns={"total_amount": "gross_sales"}, inplace=True)
-
-# === Convert 'date' safely ===
-if "date" in revenue_df.columns:
-    revenue_df["date"] = revenue_df["date"].astype(str).str.extract(r"(\d{2}/\d{2}/\d{4})")[0]
-    revenue_df["date"] = pd.to_datetime(revenue_df["date"], format="%m/%d/%Y", errors="coerce")
-else:
-    revenue_df["date"] = pd.NaT  # fallback
-
-# === Convert category month column ===
 if "date_range" in category_df.columns:
     category_df.rename(columns={"date_range": "month"}, inplace=True)
-if "month" in category_df.columns:
-    category_df["month"] = category_df["month"].astype(str).str.extract(r"(\d{2}/\d{2}/\d{4})")[0]
-    category_df["month"] = pd.to_datetime(category_df["month"], format="%m/%d/%Y", errors="coerce")
+
+# === Convert Date Strings to datetime ===
+if revenue_df["date"].dtype == object:
+    revenue_df["date"] = revenue_df["date"].str.extract(r"(\d{2}/\d{2}/\d{4})")[0]
+revenue_df["date"] = pd.to_datetime(revenue_df["date"], format="%m/%d/%Y", errors="coerce")
 
 # === Month-to-Date Filter ===
 today = pd.to_datetime(datetime.now().date())
@@ -59,12 +57,12 @@ k2.metric("Avg Order Value", f"${aov_df.get('avg_order_value', [None])[0]:,.2f}"
 k3.metric("Avg Items per Order", f"{aov_df.get('avg_items_per_order', [None])[0]:.2f}" if not aov_df.empty else "N/A")
 st.markdown("---")
 
-# === Revenue Trend Chart ===
+# === Revenue Trend ===
 st.subheader("Revenue Trend (Daily)")
-if not mtd_df.empty and "date" in mtd_df.columns and "gross_sales" in mtd_df.columns:
-    fig = px.line(mtd_df, x="date", y="gross_sales", markers=True)
-    fig.update_layout(height=380, xaxis_title="Date", yaxis_title="Gross Sales ($)", showlegend=False)
-    st.plotly_chart(fig, use_container_width=True)
+if not mtd_df.empty:
+    line_fig = px.line(mtd_df, x="date", y="gross_sales", markers=True)
+    line_fig.update_layout(height=380, xaxis_title="Date", yaxis_title="Gross Sales ($)", showlegend=False)
+    st.plotly_chart(line_fig, use_container_width=True)
 else:
     st.info("No revenue data available for the current month.")
 
@@ -78,9 +76,8 @@ else:
 
 # === Category Sales ===
 st.subheader("Top Revenue Categories (MTD)")
-if not category_df.empty and "month" in category_df.columns:
-    mtd_cat = category_df[category_df["month"] >= start_month].copy()
-    fig = px.bar(mtd_cat, x="total_revenue", y="category", orientation="h", text_auto=True)
+if not category_df.empty:
+    fig = px.bar(category_df, x="total_revenue", y="category", orientation="h", text_auto=True)
     st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("No category sales data available.")
@@ -94,14 +91,10 @@ else:
 
 # === Traffic Alerts ===
 st.subheader("Traffic Insights (Last 30 Days)")
-if not alert_df.empty and {"date", "orders", "traffic_flag"}.issubset(alert_df.columns):
+if not alert_df.empty and "traffic_flag" in alert_df.columns:
     st.dataframe(alert_df[["date", "orders", "traffic_flag"]], use_container_width=True)
 else:
     st.info("No traffic insights available.")
 
-# === Footer ===
 st.markdown("---")
-st.markdown(
-    f"<div style='text-align: center; color: gray;'>Last updated: {today.strftime('%B %d, %Y')}</div>",
-    unsafe_allow_html=True
-)
+st.markdown(f"<div style='text-align: center; color: gray;'>Last updated: {today.strftime('%B %d, %Y')}</div>", unsafe_allow_html=True)
