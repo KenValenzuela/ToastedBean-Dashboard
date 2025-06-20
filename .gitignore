@@ -11,8 +11,6 @@ __pycache__/
 # Jupyter
 .ipynb_checkpoints/
 
-# Streamlit
-.streamlit/config.toml
 
 # VSCode/PyCharm
 .vscode/
