@@ -16,7 +16,6 @@ st.set_page_config(
 
 st.image("assets/toastedbean.png", use_column_width=False, width=180)
 
-
 st.title("Toasted Bean Coffee Truck – Executive Summary")
 st.caption("Month-to-date performance overview across revenue, order behavior, and traffic signals.")
 st.markdown("---")
@@ -29,7 +28,7 @@ category_df = fetch_query("sql/revenue_by_category.sql")
 loyalty_df = fetch_query("sql/top_returning_customers.sql")
 alert_df = fetch_query("sql/low_traffic_alerts.sql")
 
-# === Rename for Consistency ===
+# === Standardize Column Names ===
 if "date" not in revenue_df.columns and "date_range" in revenue_df.columns:
     revenue_df.rename(columns={"date_range": "date"}, inplace=True)
 if "gross_sales" not in revenue_df.columns and "total_amount" in revenue_df.columns:
@@ -37,11 +36,15 @@ if "gross_sales" not in revenue_df.columns and "total_amount" in revenue_df.colu
 if "date_range" in category_df.columns:
     category_df.rename(columns={"date_range": "month"}, inplace=True)
 
+# === Extract Start Date from Range for MTD Filter ===
+if revenue_df["date"].dtype == object:
+    revenue_df["date"] = revenue_df["date"].str.extract(r"(\d{2}/\d{2}/\d{4})")[0]
+revenue_df["date"] = pd.to_datetime(revenue_df["date"], format="%m/%d/%Y", errors="coerce")
+
 # === MTD Filtering ===
-revenue_df["date"] = pd.to_datetime(revenue_df["date"], errors="coerce")
 today = pd.to_datetime(datetime.now().date())
 start_month = today.replace(day=1)
-mtd_df = revenue_df[revenue_df["date"] >= start_month]
+mtd_df = revenue_df[revenue_df["date"] >= start_month].copy()
 
 # === KPIs ===
 st.subheader("Key Metrics — Month to Date")
@@ -118,17 +121,22 @@ else:
     st.info("No returning customer data found.")
 
 # === Traffic Alerts ===
-st.subheader("Low Traffic Days (Last 30 Days)")
+st.subheader("Traffic Insights (Last 30 Days)")
 if not alert_df.empty and "traffic_flag" in alert_df.columns:
     low_days = alert_df[alert_df["traffic_flag"].str.contains("BELOW", na=False)]
+    high_days = alert_df[alert_df["traffic_flag"].str.contains("ABOVE", na=False)]
+
     if not low_days.empty:
-        st.warning("Some days had below-average order volume:")
-        st.dataframe(
-            low_days[["date", "orders", "total_sales", "traffic_flag"]],
-            use_container_width=True
-        )
+        st.warning("📉 Below-average order volume:")
+        st.dataframe(low_days[["date", "orders", "total_sales", "traffic_flag"]], use_container_width=True)
     else:
-        st.success("No low-traffic days recorded in the past 30 days.")
+        st.success("✅ No below-average days.")
+
+    if not high_days.empty:
+        st.success("📈 Above-average order volume:")
+        st.dataframe(high_days[["date", "orders", "total_sales", "traffic_flag"]], use_container_width=True)
+    else:
+        st.info("No above-average traffic spikes detected.")
 else:
     st.info("No traffic data available.")
 
