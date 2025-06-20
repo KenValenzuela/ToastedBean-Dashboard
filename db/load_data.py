@@ -6,7 +6,7 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
 
-# === Setup Project Root ===
+# === Setup ===
 project_root = Path(__file__).resolve().parent.parent
 os.chdir(project_root)
 
@@ -14,11 +14,11 @@ import sys
 sys.path.append(str(project_root / "db"))
 from category_map import standardize_category
 
-# === Load Environment ===
+# === Load Env ===
 load_dotenv(dotenv_path=project_root / ".env")
 DB_URL = (
-    f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@"
-    f"{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
+    f"postgresql+psycopg2://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@"
+    f"{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}?sslmode=require"
 )
 engine = create_engine(DB_URL)
 
