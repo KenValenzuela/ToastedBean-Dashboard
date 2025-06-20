@@ -1,0 +1,22 @@
+
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Streamlit
+.streamlit/config.toml
+
+# VSCode/PyCharm
+.vscode/
+.idea/
+
+# System
+.DS_Store
