@@ -1,0 +1,8 @@
+# .streamlit/config.toml
+
+[theme]
+primaryColor = "#ED5CA6"         # Toasted pink
+backgroundColor = "#FFF5F9"      # Creamy off-white
+secondaryBackgroundColor = "#FAEAEF"  # Light accent
+textColor = "#5B3E31"            # Brown for readability
+font = "sans serif"
