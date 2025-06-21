@@ -44,9 +44,10 @@ if "customer_id" in loyalty_df.columns:
     loyalty_df = loyalty_df.drop(columns=["customer_id"])
 
 # === Validate Revenue Data ===
-if revenue_df.empty or "date" not in revenue_df.columns:
+if revenue_df.empty or "date_range" not in revenue_df.columns:
     st.error("🚨 Could not load revenue data. Check database connection or SQL file: `sql/sales_trends.sql`.")
     st.stop()
+
 
 # === Normalize Column Names ===
 if "date_range" in revenue_df.columns:
