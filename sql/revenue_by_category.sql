@@ -1,13 +1,11 @@
 -- sql/revenue_by_category.sql
+-- Cleaned to support DATE type and monthly aggregation
 
 SELECT
-    category,
-    date_range,
-    ROUND(SUM(revenue), 2) AS total_revenue
-FROM
-    category_sales
-GROUP BY
-    category, date_range
-ORDER BY
-    date_range DESC,
-    total_revenue DESC;
+  category,
+  DATE_TRUNC('month', date) AS month,
+  ROUND(SUM(revenue), 2) AS total_revenue
+FROM category_sales
+WHERE category IS NOT NULL
+GROUP BY category, DATE_TRUNC('month', date)
+ORDER BY month DESC, total_revenue DESC;

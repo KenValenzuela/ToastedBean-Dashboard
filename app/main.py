@@ -6,6 +6,7 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime
 
+# === Config ===
 st.set_page_config(
     page_title="Toasted Bean Dashboard",
     page_icon="📊",
@@ -13,10 +14,19 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# === App Header ===
 st.image("assets/toastedbean.png", use_column_width=False, width=180)
 st.title("Toasted Bean Coffee Truck – Executive Summary")
 st.caption("Month-to-date performance overview across revenue, order behavior, and traffic signals.")
 st.markdown("---")
+
+# === Helper: Anonymize Names ===
+def anonymize_customer_names(df, column="customer_name"):
+    if column in df.columns:
+        unique_names = df[column].dropna().unique()
+        name_map = {name: f"Customer_{i+1:03d}" for i, name in enumerate(unique_names)}
+        df[column] = df[column].map(name_map)
+    return df
 
 # === Load Queries ===
 revenue_df = fetch_query("sql/sales_trends.sql")
@@ -25,6 +35,9 @@ payment_df = fetch_query("sql/aov_by_payment_method.sql")
 category_df = fetch_query("sql/revenue_by_category.sql")
 loyalty_df = fetch_query("sql/top_returning_customers.sql")
 alert_df = fetch_query("sql/low_traffic_alerts.sql")
+
+# === Anonymize Names in Loyalty Table ===
+loyalty_df = anonymize_customer_names(loyalty_df, column="customer_name")
 
 # === Drop Customer ID from Loyalty Table ===
 if "customer_id" in loyalty_df.columns:

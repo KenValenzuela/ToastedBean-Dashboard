@@ -1,11 +1,14 @@
--- app/sql/aov_by_payment_method.sql
-
+-- sql/aov_by_payment_method.sql
 SELECT
   COALESCE(card_brand, 'Cash') AS payment_method,
-  COUNT(DISTINCT transaction_id) AS total_orders,
+  COUNT(DISTINCT transaction_id) AS order_count,
   ROUND(SUM(gross_sales), 2) AS total_revenue,
-  ROUND(SUM(gross_sales) / COUNT(DISTINCT transaction_id), 2) AS avg_order_value
+  CASE
+    WHEN COUNT(DISTINCT transaction_id) > 0 THEN
+      ROUND(SUM(gross_sales) / COUNT(DISTINCT transaction_id), 2)
+    ELSE 0
+  END AS avg_order_value
 FROM detail_items
-WHERE transaction_id IS NOT NULL
+WHERE card_brand IS NOT NULL AND gross_sales > 0
 GROUP BY payment_method
 ORDER BY avg_order_value DESC;
