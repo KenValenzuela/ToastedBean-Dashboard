@@ -8,8 +8,8 @@ import altair as alt
 
 # === Page Setup ===
 st.set_page_config(page_title="Daily Insights", layout="wide")
-st.title("Daily Order Breakdown")
-st.caption("Explore per-day insights including hourly volume, revenue mix, and top-selling items.")
+st.title("📅 Daily Order Insights")
+st.caption("Analyze day-level sales patterns including hourly volume, item performance, and revenue mix.")
 st.markdown("---")
 
 # === Load and Prepare Data ===
@@ -21,7 +21,7 @@ df["hour"] = df["datetime"].dt.hour
 df["weekday"] = df["datetime"].dt.day_name()
 
 # === Sidebar Filters ===
-st.sidebar.header("Filter Options")
+st.sidebar.header("📂 Filter Options")
 available_dates = sorted(df["date"].unique(), reverse=True)
 selected_date = st.sidebar.selectbox("Select a Date", available_dates)
 
@@ -38,7 +38,7 @@ filtered = df[
 ]
 
 # === KPI Summary ===
-st.subheader(f"Summary for {selected_date}")
+st.subheader(f"📌 Summary for {selected_date}")
 k1, k2, k3 = st.columns(3)
 
 k1.metric("Total Orders", len(filtered))
@@ -51,7 +51,7 @@ k3.metric(
 st.markdown("---")
 
 # === Hourly Revenue Heatmap ===
-st.subheader("Hourly Revenue Heatmap (All Dates)")
+st.subheader("🕒 Hourly Revenue Heatmap (All Dates)")
 heat_df = df.groupby(["weekday", "hour"])["gross_sales"].sum().reset_index()
 
 heat = alt.Chart(heat_df).mark_rect().encode(
@@ -62,9 +62,10 @@ heat = alt.Chart(heat_df).mark_rect().encode(
 ).properties(height=420)
 
 st.altair_chart(heat, use_container_width=True)
+st.markdown("> 💡 Use this view to optimize hourly staffing and promo timing based on weekday heat zones.")
 
 # === Top Items Table ===
-st.subheader("Top Items Sold on Selected Day")
+st.subheader("🏆 Top Items Sold on Selected Day")
 top_items = (
     filtered.groupby("item")["gross_sales"]
     .sum()
@@ -80,16 +81,18 @@ else:
 
 # === Bonus Insights ===
 st.markdown("---")
-st.subheader("📅 Revenue by Weekday")
+
+st.subheader("📅 Total Revenue by Weekday")
 weekday_df = fetch_query("sql/revenue_by_weekday.sql")
 if not weekday_df.empty:
     weekday_chart = px.bar(weekday_df, x="weekday", y="total_revenue", title=None, labels={"total_revenue": "Revenue ($)"})
     weekday_chart.update_layout(height=360)
     st.plotly_chart(weekday_chart, use_container_width=True)
+    st.markdown("> 🔄 Identify which days consistently drive the most revenue and plan inventory accordingly.")
 else:
     st.info("No weekday revenue data available.")
 
-st.subheader("🔥 Peak Ordering Hours")
+st.subheader("⏱️ Peak Ordering Hours")
 peak_df = fetch_query("sql/peak_hours.sql")
 if not peak_df.empty:
     st.dataframe(peak_df, use_container_width=True)
@@ -106,6 +109,6 @@ else:
 # === Footer ===
 st.markdown("---")
 st.markdown(
-    "<div style='text-align: center; color: gray;'>Use this page to optimize daily prep, staffing, and promos.</div>",
+    "<div style='text-align: center; color: gray;'>Use this dashboard to fine-tune prep, shifts, and product pairings.</div>",
     unsafe_allow_html=True
 )
