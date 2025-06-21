@@ -77,7 +77,7 @@ else:
 # === Payment Mix ===
 st.subheader("Payment Method Mix")
 if not payment_df.empty:
-    fig = px.bar(payment_df, x="total_orders", y="payment_method", orientation="h", text_auto=True)
+    fig = px.bar(payment_df, x="order_count", y="payment_method", orientation="h", text_auto=True)
     st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("No payment data available.")
