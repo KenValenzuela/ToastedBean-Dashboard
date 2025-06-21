@@ -6,7 +6,7 @@ import altair as alt
 from utils import fetch_query
 
 st.title("📊 Category Sales Trends")
-st.caption("Analyze category-level revenue trends across date ranges.")
+st.caption("Analyze category-level revenue trends by month.")
 
 # === Load Data ===
 df = fetch_query("sql/revenue_by_category.sql")
@@ -15,13 +15,14 @@ if df.empty:
     st.warning("No data available.")
     st.stop()
 
-# === Drop nulls if any ===
-df = df.dropna(subset=["date_range", "category", "total_revenue"])
+# === Parse and Clean ===
+df["month"] = pd.to_datetime(df["month"], errors="coerce")
+df = df.dropna(subset=["month", "category", "total_revenue"])
 
 # === Filter Sidebar ===
-ranges = df["date_range"].unique().tolist()
-selected_ranges = st.multiselect("Select Date Range(s):", ranges, default=ranges)
-filtered_df = df[df["date_range"].isin(selected_ranges)]
+months = df["month"].dt.strftime("%B %Y").unique().tolist()
+selected = st.multiselect("Select Month(s):", months, default=months)
+filtered_df = df[df["month"].dt.strftime("%B %Y").isin(selected)]
 
 # === Chart ===
 if not filtered_df.empty:
@@ -29,9 +30,9 @@ if not filtered_df.empty:
         x=alt.X("total_revenue:Q", title="Total Revenue ($)"),
         y=alt.Y("category:N", sort='-x'),
         color=alt.Color("category:N", legend=None),
-        tooltip=["category", "total_revenue", "date_range"]
+        tooltip=["category", "total_revenue", "month"]
     ).properties(height=400, width=700)
 
     st.altair_chart(chart, use_container_width=True)
 else:
-    st.info("No data available for selected range(s).")
+    st.info("No data available for selected month(s).")
