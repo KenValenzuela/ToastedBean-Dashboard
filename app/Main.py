@@ -1,4 +1,4 @@
-# app/Home.py
+# app/Main.py
 
 import streamlit as st
 from utils import fetch_query
