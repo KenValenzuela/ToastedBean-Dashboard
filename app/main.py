@@ -85,8 +85,9 @@ else:
 # === Category Sales ===
 st.subheader("Top Revenue Categories (MTD)")
 if not category_df.empty:
-    fig = px.bar(category_df, x="total_revenue", y="category", orientation="h", text_auto=True)
+    fig = px.bar(category_df, x="revenue", y="category", orientation="h", text_auto=True)
     st.plotly_chart(fig, use_container_width=True)
+
 else:
     st.info("No category sales data available.")
 
