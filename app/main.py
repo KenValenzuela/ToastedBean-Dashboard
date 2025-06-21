@@ -107,3 +107,4 @@ else:
 # === Footer ===
 st.markdown("---")
 st.markdown(f"<div style='text-align: center; color: gray;'>Last updated: {today.strftime('%B %d, %Y')}</div>", unsafe_allow_html=True)
+
