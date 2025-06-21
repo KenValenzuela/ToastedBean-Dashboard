@@ -53,8 +53,8 @@ if "date_range" in revenue_df.columns:
     revenue_df.rename(columns={"date_range": "date"}, inplace=True)
 if "total_amount" in revenue_df.columns:
     revenue_df.rename(columns={"total_amount": "gross_sales"}, inplace=True)
-if "date_range" in category_df.columns:
-    category_df.rename(columns={"date_range": "month"}, inplace=True)
+#if "date_range" in category_df.columns:
+    #category_df.rename(columns={"date_range": "month"}, inplace=True)
 
 # === Convert Date Strings to datetime ===
 if revenue_df["date"].dtype == object:
