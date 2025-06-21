@@ -1,6 +1,6 @@
 -- ====================================
--- 💎 Toasted Bean Clean Warehouse Schema (v2)
--- Includes employee tracking and proper date handling
+-- 💎 Toasted Bean Clean Warehouse Schema (v2.1)
+-- Matches cleaned CSV structure: monthly ranges
 -- ====================================
 
 -- 🔁 Drop tables to avoid duplicate definitions
@@ -43,13 +43,15 @@ COMMENT ON TABLE sales_summary IS 'Aggregate Square summary metrics by sales_typ
 
 -- ========================
 -- 📈 category_sales
--- Daily revenue by category
+-- Monthly revenue by category (based on start/end date)
 -- ========================
 CREATE TABLE category_sales (
     category       TEXT NOT NULL,
-    date           DATE NOT NULL,
+    start_date     DATE NOT NULL,
+    end_date       DATE NOT NULL,
     revenue        NUMERIC(10,2) NOT NULL CHECK (revenue >= 0)
 );
+COMMENT ON TABLE category_sales IS 'Monthly revenue totals for each item category.';
 
 -- ========================
 -- 🧾 detail_items
@@ -64,11 +66,11 @@ CREATE TABLE detail_items (
     gross_sales        NUMERIC(10,2) NOT NULL CHECK (gross_sales >= 0),
     discounts          NUMERIC(10,2) DEFAULT 0 CHECK (discounts >= 0),
     refunds            NUMERIC(10,2) DEFAULT 0 CHECK (refunds >= 0),
-    modifiers_applied  TEXT, -- Consider normalizing (see below)
-    channel            TEXT,  -- e.g., 'Window', 'Preorder'
+    modifiers_applied  TEXT,
+    channel            TEXT,
     card_brand         TEXT,
     employee_id        TEXT,
-    employee_name      TEXT,  -- Optionally denormalize for quick visual use
+    employee_name      TEXT,
     customer_id        TEXT,
     customer_name      TEXT,
     datetime           TIMESTAMP GENERATED ALWAYS AS ((date + time)::timestamp) STORED
@@ -78,7 +80,6 @@ COMMENT ON TABLE detail_items IS 'Granular transaction-level sales data with emp
 -- ========================
 -- OPTIONAL: Normalized modifier table for advanced analytics
 -- ========================
--- UNNEST(modifiers_applied) could populate this with item link
 -- CREATE TABLE modifiers (
 --     modifier_id SERIAL PRIMARY KEY,
 --     transaction_id TEXT,

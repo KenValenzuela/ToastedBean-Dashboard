@@ -1,10 +1,9 @@
+-- sql/sales_trends.sql
+
 SELECT
-    date_range AS date,
+    CONCAT(TO_CHAR(start_date, 'MM/DD/YYYY'), '–', TO_CHAR(end_date, 'MM/DD/YYYY')) AS date_range,
     ROUND(SUM(amount), 2) AS total_amount
 FROM sales_summary
-WHERE
-    sales_type = 'Sale' AND
-    amount > 0 AND
-    TO_DATE(date_range, 'MM/DD/YYYY') >= date_trunc('month', CURRENT_DATE)
-GROUP BY date_range
-ORDER BY TO_DATE(date_range, 'MM/DD/YYYY');
+WHERE sales_type = 'Gross Sales'
+GROUP BY start_date, end_date
+ORDER BY start_date;
