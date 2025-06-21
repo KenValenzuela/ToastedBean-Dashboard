@@ -8,3 +8,8 @@ FROM category_sales
 WHERE category IS NOT NULL
 GROUP BY month, category
 ORDER BY month DESC, total_revenue DESC;
+
+SELECT *
+FROM category_sales
+WHERE category IS NOT NULL
+LIMIT 10;

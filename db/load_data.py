@@ -43,9 +43,17 @@ category["category"] = category["category"].apply(standardize_category)
 category["start_date"] = pd.to_datetime(category["start_date"])
 category["end_date"] = pd.to_datetime(category["end_date"])
 category["revenue"] = pd.to_numeric(
-    category["revenue"].replace(r"[\$,]", "", regex=True), errors="coerce"
+    category["revenue"].replace(r"(US)?\$|,", "", regex=True),
+    errors="coerce"
 )
+
+# Log dropped rows
+before = len(category)
 category = category.dropna(subset=required)
+after = len(category)
+if before != after:
+    print(f"⚠️ Dropped {before - after} rows from category_sales due to missing or malformed data.")
+    print(category.head(3))
 
 # === Load & Clean Sales Summary ===
 summary = pd.read_csv(summary_path)
@@ -95,7 +103,7 @@ def map_sales_type(label):
 
 summary["sales_type"] = summary["sales_type"].apply(map_sales_type)
 
-# Ensure constraint compatibility: no negative amounts
+# Enforce constraint: no negative amounts for Refunds/Discounts
 summary.loc[summary["sales_type"].isin(["Refund", "Discount"]), "amount"] = (
     summary.loc[summary["sales_type"].isin(["Refund", "Discount"]), "amount"].abs()
 )
